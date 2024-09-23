@@ -14,7 +14,7 @@ st.sidebar.title("Project Overview")
 st.sidebar.write("This project integrates mixed Tamil, English, and numeric text into images.")
 
 st.sidebar.title("Language Used")
-st.sidebar.image("https://www.pngwing.com/en/free-png-vcpgq.png", width=50)
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", width=50)
 st.sidebar.write("Python")
 
 # Function to convert image to base64 string
