@@ -4,12 +4,15 @@ from io import BytesIO
 from html2image import Html2Image
 import base64
 import os
+import shutil  # Ensure to import shutil
+
 # Check for the Chromium executable
 chrome_path = shutil.which("chromium-browser")  # or "google-chrome"
 if not chrome_path:
     st.error("Chromium is not installed or the path is incorrect.")
 else:
-    hti = Html2Image(executable_path=chrome_path)
+    hti = Html2Image(executable_path=chrome_path)  # Use the found executable path
+
 # Sidebar details
 st.sidebar.title("About Me")
 st.sidebar.write("Done by Hirthick S")
@@ -92,15 +95,13 @@ def main():
         html_content = generate_html(image_base64, text_input, font_color)
 
         # Render the HTML to an image using Html2Image
-        hti = Html2Image()
-        output_path = 'output_image.png'
-        hti.screenshot(html_str=html_content, save_as=output_path, size=(image.width, image.height))
+        hti.screenshot(html_str=html_content, save_as='output_image.png', size=(image.width, image.height))
 
         # Display the resulting image
-        st.image(output_path, caption="Generated Image with Text", use_column_width=True)
+        st.image('output_image.png', caption="Generated Image with Text", use_column_width=True)
 
         # Option to download the generated image
-        with open(output_path, "rb") as file:
+        with open('output_image.png', "rb") as file:
             st.download_button(
                 label="Download Image",
                 data=file,
