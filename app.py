@@ -6,7 +6,6 @@ import base64
 import os
 import shutil
 
-
 # Sidebar details
 st.sidebar.title("About Me")
 st.sidebar.write("Done by Hirthick S")
@@ -70,6 +69,9 @@ def generate_html(image_base64, text, color):
 # Streamlit app
 def main():
     st.title("Text on Image (Mixed Tamil, English, and Numbers)")
+
+    # Initialize Html2Image
+    hti = Html2Image()
 
     # Image upload
     text_input = st.text_input("Enter the text", value="")
