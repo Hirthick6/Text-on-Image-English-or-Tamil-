@@ -6,6 +6,7 @@ import textwrap
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+import string
 
 # Function to convert image to base64 string
 def image_to_base64(image):
@@ -91,12 +92,14 @@ def create_image_with_text(image, text, color):
         font = ImageFont.load_default()
     
     # Wrap text
-    avg_char_width = sum(font.getsize(char)[0] for char in ascii_lowercase) / 26
+    avg_char_width = sum(font.getbbox(char)[2] for char in string.ascii_lowercase) / 26
     max_width = int(img.width * 0.8)
     wrapped_text = textwrap.fill(text, width=int(max_width / avg_char_width))
     
     # Calculate text position
-    text_width, text_height = draw.textsize(wrapped_text, font=font)
+    left, top, right, bottom = font.getbbox(wrapped_text)
+    text_width = right - left
+    text_height = bottom - top
     text_position = ((img.width - text_width) / 2, (img.height - text_height) / 2)
     
     # Draw text
