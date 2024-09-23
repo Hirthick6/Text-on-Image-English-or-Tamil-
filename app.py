@@ -1,85 +1,97 @@
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
+import base64
 import io
-import requests
 
-# Sidebar details
-st.sidebar.title("About Me")
-st.sidebar.write("Done by Hirthick S")
-st.sidebar.write("Data Science Scholar")
+# Function to convert image to base64 string
+def image_to_base64(image):
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
-st.sidebar.title("Project Overview")
-st.sidebar.write("This project integrates mixed Tamil, English, and numeric text into images.")
-
-st.sidebar.title("Language Used")
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", width=50)
-st.sidebar.write("Python")
-
-# Function to load a font
-@st.cache_resource
-def load_font():
-    font_url = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansTamil/NotoSansTamil-Regular.ttf"
-    response = requests.get(font_url)
-    font = ImageFont.truetype(io.BytesIO(response.content), size=50)
-    return font
-
-# Function to add text to image
-def add_text_to_image(image, text, font, text_color):
-    draw = ImageDraw.Draw(image)
-    
-    # Get text size
-    left, top, right, bottom = font.getbbox(text)
-    text_width = right - left
-    text_height = bottom - top
-    
-    # Calculate position to center the text
-    position = ((image.width - text_width) / 2, (image.height - text_height) / 2)
-    
-    # Draw text outline
-    outline_color = "black"
-    for adj in range(-3, 4):
-        draw.text((position[0]+adj, position[1]), text, font=font, fill=outline_color)
-        draw.text((position[0], position[1]+adj), text, font=font, fill=outline_color)
-    
-    # Draw main text
-    draw.text(position, text, font=font, fill=text_color)
-    
-    return image
+# Function to generate HTML content
+def generate_html(image_base64, text, color):
+    html_content = f"""
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body, html {{
+                height: 100%;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }}
+            .container {{
+                position: relative;
+                display: inline-block;
+            }}
+            .text {{
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: {color};
+                font-family: 'Noto Sans Tamil', sans-serif;
+                font-size: 5vw;
+                text-align: center;
+                text-shadow: 
+                    -2px -2px 0 #000,
+                    2px -2px 0 #000,
+                    -2px 2px 0 #000,
+                    2px 2px 0 #000;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <img src="data:image/png;base64,{image_base64}" alt="Uploaded Image">
+            <div class="text">{text}</div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 # Streamlit app
 def main():
+    st.set_page_config(page_title="Text on Image App", layout="wide")
+    
     st.title("Text on Image (Mixed Tamil, English, and Numbers)")
 
-    # Load font
-    font = load_font()
+    # Sidebar
+    st.sidebar.title("About Me")
+    st.sidebar.write("Done by Hirthick S")
+    st.sidebar.write("Data Science Scholar")
 
-    # Image upload
+    st.sidebar.title("Project Overview")
+    st.sidebar.write("This project integrates mixed Tamil, English, and numeric text into images.")
+
+    st.sidebar.title("Language Used")
+    st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", width=50)
+    st.sidebar.write("Python")
+
+    # Main content
     text_input = st.text_input("Enter the text", value="")
     uploaded_image = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
-
-    # Font color picker
     font_color = st.color_picker("Pick a text color", "#FFFFFF")  # Default is white
 
     if uploaded_image and text_input:
-        # Load the image with Pillow
-        image = Image.open(uploaded_image).convert("RGBA")
+        image = Image.open(uploaded_image)
+        image_base64 = image_to_base64(image)
+        html_content = generate_html(image_base64, text_input, font_color)
 
-        # Add text to image
-        result_image = add_text_to_image(image, text_input, font, font_color)
+        # Display the HTML content
+        st.components.v1.html(html_content, height=600)
 
-        # Display the resulting image
-        st.image(result_image, caption="Generated Image with Text", use_column_width=True)
-
-        # Option to download the generated image
-        buf = io.BytesIO()
-        result_image.save(buf, format="PNG")
-        byte_im = buf.getvalue()
-        
+        # Option to download the HTML
         st.download_button(
-            label="Download Image",
-            data=byte_im,
-            file_name="result.png",
-            mime="image/png"
+            label="Download HTML",
+            data=html_content,
+            file_name="result.html",
+            mime="text/html"
         )
 
 if __name__ == "__main__":
