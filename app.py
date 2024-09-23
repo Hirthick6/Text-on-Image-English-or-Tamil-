@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 import base64
 import io
+import textwrap
 
 # Function to convert image to base64 string
 def image_to_base64(image):
@@ -11,6 +12,15 @@ def image_to_base64(image):
 
 # Function to generate HTML content
 def generate_html(image_base64, text, color, width, height):
+    # Calculate font size based on image width
+    font_size = max(12, int(width / 20))  # Minimum font size of 12px
+    
+    # Estimate characters per line
+    chars_per_line = max(1, int(width / (font_size * 0.6)))  # Assuming average char width is 0.6 times font size
+    
+    # Wrap text
+    wrapped_text = textwrap.fill(text, width=chars_per_line)
+    
     html_content = f"""
     <html>
     <head>
@@ -42,21 +52,23 @@ def generate_html(image_base64, text, color, width, height):
                 transform: translate(-50%, -50%);
                 color: {color};
                 font-family: 'Noto Sans Tamil', sans-serif;
-                font-size: 5vw;
+                font-size: {font_size}px;
                 text-align: center;
                 text-shadow: 
                     -2px -2px 0 #000,
                     2px -2px 0 #000,
                     -2px 2px 0 #000,
                     2px 2px 0 #000;
-                white-space: nowrap;
+                white-space: pre-wrap;
+                max-width: 90%;
+                word-wrap: break-word;
             }}
         </style>
     </head>
     <body>
         <div class="container">
             <img class="image" src="data:image/png;base64,{image_base64}" alt="Uploaded Image">
-            <div class="text">{text}</div>
+            <div class="text">{wrapped_text}</div>
         </div>
     </body>
     </html>
