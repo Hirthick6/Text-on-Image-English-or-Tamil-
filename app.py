@@ -10,7 +10,7 @@ def image_to_base64(image):
     return base64.b64encode(buffered.getvalue()).decode()
 
 # Function to generate HTML content
-def generate_html(image_base64, text, color):
+def generate_html(image_base64, text, color, width, height):
     html_content = f"""
     <html>
     <head>
@@ -27,6 +27,13 @@ def generate_html(image_base64, text, color):
             .container {{
                 position: relative;
                 display: inline-block;
+                width: {width}px;
+                height: {height}px;
+            }}
+            .image {{
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
             }}
             .text {{
                 position: absolute;
@@ -42,12 +49,13 @@ def generate_html(image_base64, text, color):
                     2px -2px 0 #000,
                     -2px 2px 0 #000,
                     2px 2px 0 #000;
+                white-space: nowrap;
             }}
         </style>
     </head>
     <body>
         <div class="container">
-            <img src="data:image/png;base64,{image_base64}" alt="Uploaded Image">
+            <img class="image" src="data:image/png;base64,{image_base64}" alt="Uploaded Image">
             <div class="text">{text}</div>
         </div>
     </body>
@@ -65,10 +73,8 @@ def main():
     st.sidebar.title("About Me")
     st.sidebar.write("Done by Hirthick S")
     st.sidebar.write("Data Science Scholar")
-
     st.sidebar.title("Project Overview")
     st.sidebar.write("This project integrates mixed Tamil, English, and numeric text into images.")
-
     st.sidebar.title("Language Used")
     st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", width=50)
     st.sidebar.write("Python")
@@ -80,11 +86,12 @@ def main():
 
     if uploaded_image and text_input:
         image = Image.open(uploaded_image)
+        width, height = image.size
         image_base64 = image_to_base64(image)
-        html_content = generate_html(image_base64, text_input, font_color)
+        html_content = generate_html(image_base64, text_input, font_color, width, height)
 
         # Display the HTML content
-        st.components.v1.html(html_content, height=600)
+        st.components.v1.html(html_content, height=height, scrolling=True)
 
         # Option to download the HTML
         st.download_button(
