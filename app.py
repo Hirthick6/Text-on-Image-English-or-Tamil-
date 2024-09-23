@@ -3,6 +3,10 @@ from PIL import Image
 import base64
 import io
 import textwrap
+import matplotlib.pyplot as plt
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 # Function to convert image to base64 string
 def image_to_base64(image):
@@ -75,12 +79,36 @@ def generate_html(image_base64, text, color, width, height):
     """
     return html_content
 
+# Function to create image with text overlay
+def create_image_with_text(image, text, color):
+    img = image.copy()
+    plt.figure(figsize=(10, 10))
+    plt.imshow(img)
+    plt.text(img.width/2, img.height/2, text, fontsize=20, color=color, 
+             ha='center', va='center', wrap=True)
+    plt.axis('off')
+    
+    buf = BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
+    buf.seek(0)
+    img_with_text = Image.open(buf)
+    return img_with_text
+
+# Function to create PDF
+def create_pdf(image_with_text):
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    c.drawImage(image_with_text, 100, 100, width=400, height=400)
+    c.save()
+    buffer.seek(0)
+    return buffer
+
 # Streamlit app
 def main():
     st.set_page_config(page_title="Text on Image App", layout="wide")
     
     st.title("Text on Image (Mixed Tamil, English, and Numbers)")
-
+    
     # Sidebar
     st.sidebar.title("About Me")
     st.sidebar.write("Done by Hirthick S")
@@ -90,20 +118,56 @@ def main():
     st.sidebar.title("Language Used")
     st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", width=50)
     st.sidebar.write("Python")
-
+    
     # Main content
     text_input = st.text_input("Enter the text", value="")
     uploaded_image = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
     font_color = st.color_picker("Pick a text color", "#FFFFFF")  # Default is white
-
+    
     if uploaded_image and text_input:
         image = Image.open(uploaded_image)
         width, height = image.size
         image_base64 = image_to_base64(image)
         html_content = generate_html(image_base64, text_input, font_color, width, height)
-
+        
         # Display the HTML content
         st.components.v1.html(html_content, height=height, scrolling=True)
+        
+        # Create image with text overlay
+        image_with_text = create_image_with_text(image, text_input, font_color)
+        
+        # Export options
+        st.subheader("Export Options")
+        col1, col2, col3 = st.columns(3)
+        
+        # Download Image button
+        with col1:
+            img_download = BytesIO()
+            image_with_text.save(img_download, format='PNG')
+            st.download_button(
+                label="Download Image",
+                data=img_download.getvalue(),
+                file_name="image_with_text.png",
+                mime="image/png"
+            )
+        
+        # Print button (opens in new tab for printing)
+        with col2:
+            img_print = BytesIO()
+            image_with_text.save(img_print, format='PNG')
+            img_print_base64 = base64.b64encode(img_print.getvalue()).decode()
+            print_html = f'<img src="data:image/png;base64,{img_print_base64}" style="width:100%">'
+            st.markdown(f'<a href="data:text/html;base64,{base64.b64encode(print_html.encode()).decode()}" target="_blank"><button>Print Image</button></a>', unsafe_allow_html=True)
+        
+        # Download PDF button
+        with col3:
+            pdf_buffer = create_pdf(image_with_text)
+            st.download_button(
+                label="Download PDF",
+                data=pdf_buffer,
+                file_name="image_with_text.pdf",
+                mime="application/pdf"
+            )
 
 if __name__ == "__main__":
     main()
