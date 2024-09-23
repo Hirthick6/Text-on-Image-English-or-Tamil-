@@ -6,15 +6,6 @@ import base64
 import os
 import shutil  # Ensure to import shutil
 
-# Set the path for Chromium on Windows
-chrome_path = "C:\\Program Files\\Chromium\\chromium.exe"  # Adjust if necessary
-
-# Check if the Chromium executable exists
-if not os.path.exists(chrome_path):
-    st.error("Chromium is not installed or the path is incorrect.")
-else:
-    hti = Html2Image(executable_path=chrome_path) 
-
 # Sidebar details
 st.sidebar.title("About Me")
 st.sidebar.write("Done by Hirthick S")
