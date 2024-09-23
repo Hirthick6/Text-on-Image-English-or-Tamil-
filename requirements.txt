@@ -1,3 +1,5 @@
 streamlit 
 Pillow 
 html2image 
+reportlab==4.0.4
+
