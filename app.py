@@ -118,7 +118,19 @@ def create_pdf(image):
 
     # Create a PDF using reportlab and embed the image
     c = canvas.Canvas(buffer, pagesize=letter)
-    c.drawImage(image_buffer, 100, 400, width=400, height=400)  # Adjust as per image size
+    
+    # Get the image dimensions and maintain the aspect ratio
+    img_width, img_height = image.size
+    aspect_ratio = img_width / img_height
+    pdf_width, pdf_height = letter
+    scaled_width = min(pdf_width, pdf_height * aspect_ratio)
+    scaled_height = scaled_width / aspect_ratio
+
+    # Draw the image in the center of the PDF
+    x_position = (pdf_width - scaled_width) / 2
+    y_position = (pdf_height - scaled_height) / 2
+
+    c.drawImage(image_buffer, x_position, y_position, width=scaled_width, height=scaled_height)
     c.save()
 
     buffer.seek(0)
@@ -159,29 +171,10 @@ def main():
         
         # Export options
         st.subheader("Export Options")
-        col1, col2, col3 = st.columns(3)
-        
-        # Download Image button
-        with col1:
-            img_download = BytesIO()
-            image_with_text.save(img_download, format='PNG')
-            st.download_button(
-                label="Download Image",
-                data=img_download.getvalue(),
-                file_name="image_with_text.png",
-                mime="image/png"
-            )
-        
-        # Print button (opens in new tab for printing)
-        with col2:
-            img_print = BytesIO()
-            image_with_text.save(img_print, format='PNG')
-            img_print_base64 = base64.b64encode(img_print.getvalue()).decode()
-            print_html = f'<img src="data:image/png;base64,{img_print_base64}" style="width:100%">'
-            st.markdown(f'<a href="data:text/html;base64,{base64.b64encode(print_html.encode()).decode()}" target="_blank"><button>Print Image</button></a>', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
         
         # Download PDF button
-        with col3:
+        with col1:
             pdf_buffer = create_pdf(image_with_text)
             st.download_button(
                 label="Download PDF",
