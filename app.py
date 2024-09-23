@@ -1,10 +1,8 @@
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from io import BytesIO
 from html2image import Html2Image
 import base64
-import os
-import shutil
 
 # Sidebar details
 st.sidebar.title("About Me")
@@ -70,8 +68,8 @@ def generate_html(image_base64, text, color):
 def main():
     st.title("Text on Image (Mixed Tamil, English, and Numbers)")
 
-    # Initialize Html2Image
-    hti = Html2Image()
+    # Initialize Html2Image with Chromium path
+    hti = Html2Image(browser_executable="C:/Users/user/AppData/Local/Chromium/Application/chrome.exe")
 
     # Image upload
     text_input = st.text_input("Enter the text", value="")
