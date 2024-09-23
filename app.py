@@ -1,9 +1,8 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import base64
 import io
 import textwrap
-import matplotlib.pyplot as plt
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -79,20 +78,31 @@ def generate_html(image_base64, text, color, width, height):
     """
     return html_content
 
-# Function to create image with text overlay
+# Function to create image with text overlay using PIL
 def create_image_with_text(image, text, color):
     img = image.copy()
-    plt.figure(figsize=(10, 10))
-    plt.imshow(img)
-    plt.text(img.width/2, img.height/2, text, fontsize=20, color=color, 
-             ha='center', va='center', wrap=True)
-    plt.axis('off')
+    draw = ImageDraw.Draw(img)
     
-    buf = BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
-    buf.seek(0)
-    img_with_text = Image.open(buf)
-    return img_with_text
+    # Use a default font (you may need to adjust this)
+    font_size = int(min(img.width, img.height) / 20)
+    try:
+        font = ImageFont.truetype("arial.ttf", font_size)
+    except IOError:
+        font = ImageFont.load_default()
+    
+    # Wrap text
+    avg_char_width = sum(font.getsize(char)[0] for char in ascii_lowercase) / 26
+    max_width = int(img.width * 0.8)
+    wrapped_text = textwrap.fill(text, width=int(max_width / avg_char_width))
+    
+    # Calculate text position
+    text_width, text_height = draw.textsize(wrapped_text, font=font)
+    text_position = ((img.width - text_width) / 2, (img.height - text_height) / 2)
+    
+    # Draw text
+    draw.text(text_position, wrapped_text, font=font, fill=color)
+    
+    return img
 
 # Function to create PDF
 def create_pdf(image_with_text):
@@ -170,4 +180,3 @@ def main():
             )
 
 if __name__ == "__main__":
-    main()
