@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from html2image import Html2Image
 import base64
