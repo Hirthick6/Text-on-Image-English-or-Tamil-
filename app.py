@@ -107,18 +107,20 @@ def create_image_with_text(image, text, color):
     
     return img
 
-# Function to create PDF
-def create_pdf(image_with_text):
+# Function to create PDF from image
+def create_pdf(image):
     buffer = BytesIO()
-    
-    # Convert PIL image to file-like object for ReportLab
+
+    # Save PIL image to buffer as PNG
     image_buffer = BytesIO()
-    image_with_text.save(image_buffer, format='PNG')
+    image.save(image_buffer, format="PNG")
     image_buffer.seek(0)
-    
+
+    # Create a PDF using reportlab and embed the image
     c = canvas.Canvas(buffer, pagesize=letter)
-    c.drawImage(image_buffer, 100, 400, width=400, height=400)
+    c.drawImage(image_buffer, 100, 400, width=400, height=400)  # Adjust as per image size
     c.save()
+
     buffer.seek(0)
     return buffer
 
