@@ -16,7 +16,9 @@ def add_text_to_image(image, text, font_color):
     
     # Use a font size proportional to the image size
     font_size = int(min(width, height) / 10)
-    font = ImageFont.truetype("NotoSansTamil-Regular.ttf", font_size)
+    
+    # Use default font
+    font = ImageFont.load_default()
     
     # Get text size
     text_width, text_height = draw.textsize(text, font=font)
