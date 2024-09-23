@@ -2,8 +2,8 @@ import streamlit as st
 from PIL import Image
 from io import BytesIO
 from html2image import Html2Image
-import os
 import base64
+import os
 
 # Sidebar details
 st.sidebar.title("About Me")
@@ -25,7 +25,7 @@ def image_to_base64(image):
     return f"data:image/png;base64,{img_str}"
 
 # Function to generate HTML content with the image and text
-def generate_html(image_path, text, color):
+def generate_html(image_base64, text, color):
     html_content = f"""
     <html>
     <head>
@@ -34,12 +34,11 @@ def generate_html(image_path, text, color):
 
         <style>
             body, html {{
-                
                 height: 100%;
                 margin: 0;
             }}
             .bg {{
-                background-image: url({image_path});
+                background-image: url('{image_base64}');
                 height: 100%;
                 background-position: center;
                 background-repeat: no-repeat;
@@ -54,8 +53,6 @@ def generate_html(image_path, text, color):
                 font-size: 5vw;
                 text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
                 text-align: center;
-                
-                
             }}
         </style>
     </head>
@@ -72,26 +69,24 @@ def generate_html(image_path, text, color):
 def main():
     st.title("Text on Image (Mixed Tamil, English, and Numbers)")
 
-
     # Image upload
-    
-    text_input = st.text_input("Enter the text to overlay on the image", value="")
+    text_input = st.text_input("Enter the text", value="")
     uploaded_image = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
+
     # Font color picker
     font_color = st.color_picker("Pick a text color", "#FFFFFF")  # Default is white
 
     if uploaded_image and text_input:
         # Load the image with Pillow
         image = Image.open(uploaded_image)
-        
-        # Save the uploaded image locally
-        image_path = image_to_base64(image)
-  
+
+        # Convert image to base64 string
+        image_base64 = image_to_base64(image)
 
         # Generate the HTML content with image, text, and font color
-        html_content = generate_html(image_path, text_input, font_color)
+        html_content = generate_html(image_base64, text_input, font_color)
 
-        # Render the HTML to an image using html2image
+        # Render the HTML to an image using Html2Image
         hti = Html2Image()
         output_path = 'output_image.png'
         hti.screenshot(html_str=html_content, save_as=output_path, size=(image.width, image.height))
@@ -101,7 +96,7 @@ def main():
 
         # Option to download the generated image
         with open(output_path, "rb") as file:
-            btn = st.download_button(
+            st.download_button(
                 label="Download Image",
                 data=file,
                 file_name="result.png",
@@ -110,4 +105,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
