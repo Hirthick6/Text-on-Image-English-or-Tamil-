@@ -105,13 +105,6 @@ def main():
         # Display the HTML content
         st.components.v1.html(html_content, height=height, scrolling=True)
 
-        # Option to download the HTML
-        st.download_button(
-            label="Download HTML",
-            data=html_content,
-            file_name="result.html",
-            mime="text/html"
-        )
-
+        
 if __name__ == "__main__":
     main()
