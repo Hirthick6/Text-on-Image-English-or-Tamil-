@@ -26,7 +26,13 @@ def load_font():
 # Function to add text to image
 def add_text_to_image(image, text, font, text_color):
     draw = ImageDraw.Draw(image)
-    text_width, text_height = draw.textsize(text, font=font)
+    
+    # Get text size
+    left, top, right, bottom = font.getbbox(text)
+    text_width = right - left
+    text_height = bottom - top
+    
+    # Calculate position to center the text
     position = ((image.width - text_width) / 2, (image.height - text_height) / 2)
     
     # Draw text outline
