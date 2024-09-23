@@ -1,8 +1,11 @@
 import streamlit as st
 from PIL import Image
 from io import BytesIO
-from html2image import Html2Image
 import base64
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import os
 
 # Sidebar details
@@ -31,7 +34,7 @@ def generate_html(image_base64, text, color):
     <head>
         <meta charset="UTF-8">
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
-
+        
         <style>
             body, html {{
                 height: 100%;
@@ -65,16 +68,34 @@ def generate_html(image_base64, text, color):
     """
     return html_content
 
+# Function to capture screenshot using Selenium
+def capture_screenshot(html_content, output_path, width, height):
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    
+    driver.set_window_size(width, height)
+    
+    # Save HTML content to a temporary file
+    with open("temp.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
+    
+    # Open the temporary HTML file
+    driver.get("file://" + os.path.abspath("temp.html"))
+    
+    # Capture screenshot
+    driver.save_screenshot(output_path)
+    
+    driver.quit()
+    os.remove("temp.html")
+
 # Streamlit app
 def main():
     st.title("Text on Image (Mixed Tamil, English, and Numbers)")
-
-    # Set Chromium path based on environment
-    chromium_path = "C:/Users/user/AppData/Local/Chromium/Application/chrome.exe"
-    if os.path.exists(chromium_path):
-        hti = Html2Image(browser_executable=chromium_path)
-    else:
-        hti = Html2Image()  # Use default Chromium if path is not found
 
     # Image upload
     text_input = st.text_input("Enter the text", value="")
@@ -93,14 +114,15 @@ def main():
         # Generate the HTML content with image, text, and font color
         html_content = generate_html(image_base64, text_input, font_color)
 
-        # Render the HTML to an image using Html2Image
-        hti.screenshot(html_str=html_content, save_as='output_image.png', size=(image.width, image.height))
+        # Capture screenshot using Selenium
+        output_path = 'output_image.png'
+        capture_screenshot(html_content, output_path, image.width, image.height)
 
         # Display the resulting image
-        st.image('output_image.png', caption="Generated Image with Text", use_column_width=True)
+        st.image(output_path, caption="Generated Image with Text", use_column_width=True)
 
         # Option to download the generated image
-        with open('output_image.png', "rb") as file:
+        with open(output_path, "rb") as file:
             st.download_button(
                 label="Download Image",
                 data=file,
