@@ -44,7 +44,63 @@ def add_text_to_image(image, text, font_color, font_size):
 
 # Function to generate HTML content
 def generate_html(image_base64, text, color, width, height):
-    # ... (keep the existing HTML generation code) ...
+    font_size = max(12, int(width / 20))  # Minimum font size of 12px
+    chars_per_line = max(1, int(width / (font_size * 0.6)))
+    wrapped_text = textwrap.fill(text, width=chars_per_line)
+    
+    html_content = f"""
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body, html {{
+                height: 100%;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }}
+            .container {{
+                position: relative;
+                display: inline-block;
+                width: {width}px;
+                height: {height}px;
+            }}
+            .image {{
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }}
+            .text {{
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: {color};
+                font-family: 'Noto Sans Tamil', sans-serif;
+                font-size: {font_size}px;
+                text-align: center;
+                text-shadow: 
+                    -2px -2px 0 #000,
+                    2px -2px 0 #000,
+                    -2px 2px 0 #000,
+                    2px 2px 0 #000;
+                white-space: pre-wrap;
+                max-width: 90%;
+                word-wrap: break-word;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <img class="image" src="data:image/png;base64,{image_base64}" alt="Uploaded Image">
+            <div class="text">{wrapped_text}</div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 # Streamlit app
 def main():
