@@ -4,7 +4,12 @@ from io import BytesIO
 from html2image import Html2Image
 import base64
 import os
-
+# Check for the Chromium executable
+chrome_path = shutil.which("chromium-browser")  # or "google-chrome"
+if not chrome_path:
+    st.error("Chromium is not installed or the path is incorrect.")
+else:
+    hti = Html2Image(executable_path=chrome_path)
 # Sidebar details
 st.sidebar.title("About Me")
 st.sidebar.write("Done by Hirthick S")
