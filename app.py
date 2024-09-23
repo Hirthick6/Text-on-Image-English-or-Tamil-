@@ -3,6 +3,10 @@ from PIL import Image
 import base64
 import io
 import textwrap
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 # Function to convert image to base64 string
 def image_to_base64(image):
@@ -75,6 +79,35 @@ def generate_html(image_base64, text, color, width, height):
     """
     return html_content
 
+# Function to create PDF
+def create_pdf(image, text, color):
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    
+    # Register Tamil font
+    pdfmetrics.registerFont(TTFont('NotoSansTamil', 'NotoSansTamil-Regular.ttf'))
+    
+    # Add image
+    img_width, img_height = image.size
+    aspect = img_height / float(img_width)
+    max_width = 500
+    width = min(img_width, max_width)
+    height = width * aspect
+    c.drawImage(image, 50, letter[1] - 50 - height, width=width, height=height)
+    
+    # Add text
+    c.setFont('NotoSansTamil', 12)
+    c.setFillColor(color)
+    text_object = c.beginText(50, letter[1] - 60 - height)
+    for line in textwrap.wrap(text, width=60):
+        text_object.textLine(line)
+    c.drawText(text_object)
+    
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return buffer
+
 # Streamlit app
 def main():
     st.set_page_config(page_title="Text on Image App", layout="wide")
@@ -105,12 +138,13 @@ def main():
         # Display the HTML content
         st.components.v1.html(html_content, height=height, scrolling=True)
 
-        # Option to download the HTML
+        # Option to download as PDF
+        pdf_buffer = create_pdf(image, text_input, font_color)
         st.download_button(
-            label="Download HTML",
-            data=html_content,
-            file_name="result.html",
-            mime="text/html"
+            label="Download as PDF",
+            data=pdf_buffer,
+            file_name="result.pdf",
+            mime="application/pdf"
         )
 
 if __name__ == "__main__":
