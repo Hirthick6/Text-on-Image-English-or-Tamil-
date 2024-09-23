@@ -1,12 +1,7 @@
 import streamlit as st
-from PIL import Image
-from io import BytesIO
-import base64
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import os
+from PIL import Image, ImageDraw, ImageFont
+import io
+import requests
 
 # Sidebar details
 st.sidebar.title("About Me")
@@ -20,82 +15,37 @@ st.sidebar.title("Language Used")
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", width=50)
 st.sidebar.write("Python")
 
-# Function to convert image to base64 string
-def image_to_base64(image):
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    return f"data:image/png;base64,{img_str}"
+# Function to load a font
+@st.cache_resource
+def load_font():
+    font_url = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansTamil/NotoSansTamil-Regular.ttf"
+    response = requests.get(font_url)
+    font = ImageFont.truetype(io.BytesIO(response.content), size=50)
+    return font
 
-# Function to generate HTML content with the image and text
-def generate_html(image_base64, text, color):
-    html_content = f"""
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
-        
-        <style>
-            body, html {{
-                height: 100%;
-                margin: 0;
-            }}
-            .bg {{
-                background-image: url('{image_base64}');
-                height: 100%;
-                background-position: center;
-                background-repeat: no-repeat;
-                background-size: cover;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-family: 'Noto Sans Tamil', sans-serif;
-            }}
-            h2 {{
-                color: {color};
-                font-size: 5vw;
-                text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
-                text-align: center;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="bg">
-            <h2>{text}</h2>
-        </div>
-    </body>
-    </html>
-    """
-    return html_content
-
-# Function to capture screenshot using Selenium
-def capture_screenshot(html_content, output_path, width, height):
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+# Function to add text to image
+def add_text_to_image(image, text, font, text_color):
+    draw = ImageDraw.Draw(image)
+    text_width, text_height = draw.textsize(text, font=font)
+    position = ((image.width - text_width) / 2, (image.height - text_height) / 2)
     
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
+    # Draw text outline
+    outline_color = "black"
+    for adj in range(-3, 4):
+        draw.text((position[0]+adj, position[1]), text, font=font, fill=outline_color)
+        draw.text((position[0], position[1]+adj), text, font=font, fill=outline_color)
     
-    driver.set_window_size(width, height)
+    # Draw main text
+    draw.text(position, text, font=font, fill=text_color)
     
-    # Save HTML content to a temporary file
-    with open("temp.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-    
-    # Open the temporary HTML file
-    driver.get("file://" + os.path.abspath("temp.html"))
-    
-    # Capture screenshot
-    driver.save_screenshot(output_path)
-    
-    driver.quit()
-    os.remove("temp.html")
+    return image
 
 # Streamlit app
 def main():
     st.title("Text on Image (Mixed Tamil, English, and Numbers)")
+
+    # Load font
+    font = load_font()
 
     # Image upload
     text_input = st.text_input("Enter the text", value="")
@@ -106,29 +56,25 @@ def main():
 
     if uploaded_image and text_input:
         # Load the image with Pillow
-        image = Image.open(uploaded_image)
+        image = Image.open(uploaded_image).convert("RGBA")
 
-        # Convert image to base64 string
-        image_base64 = image_to_base64(image)
-
-        # Generate the HTML content with image, text, and font color
-        html_content = generate_html(image_base64, text_input, font_color)
-
-        # Capture screenshot using Selenium
-        output_path = 'output_image.png'
-        capture_screenshot(html_content, output_path, image.width, image.height)
+        # Add text to image
+        result_image = add_text_to_image(image, text_input, font, font_color)
 
         # Display the resulting image
-        st.image(output_path, caption="Generated Image with Text", use_column_width=True)
+        st.image(result_image, caption="Generated Image with Text", use_column_width=True)
 
         # Option to download the generated image
-        with open(output_path, "rb") as file:
-            st.download_button(
-                label="Download Image",
-                data=file,
-                file_name="result.png",
-                mime="image/png"
-            )
+        buf = io.BytesIO()
+        result_image.save(buf, format="PNG")
+        byte_im = buf.getvalue()
+        
+        st.download_button(
+            label="Download Image",
+            data=byte_im,
+            file_name="result.png",
+            mime="image/png"
+        )
 
 if __name__ == "__main__":
     main()
