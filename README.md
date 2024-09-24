@@ -1,5 +1,5 @@
 # Text-on-Image-English-or-Tamil
-## Resource Link ----➤ https://text-to-image-kkbz5qsdedmg3oer3ujg5v.streamlit.app/
+## Resource Link ➤➤➤➤➤ https://text-to-image-kkbz5qsdedmg3oer3ujg5v.streamlit.app/
 
 ## Project Overview
 Text-on-Image-English-or-Tamil" is a simple and effective Streamlit application that allows users to input text in both English and Tamil languages, which will then be converted and integrated onto an image. This solution supports mixed text formats and handles various font-related complexities for Tamil text. Perfect for creating customized visuals with personalized messages.
